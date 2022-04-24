@@ -1,0 +1,62 @@
+import  seaborn as sns
+import pandas as pd
+import numpy as np
+
+import tensorflow
+from tensorflow import keras
+from tensorflow.keras.layers import Dense, Dropout, Activation
+from tensorflow.keras.models import Model, Sequential
+from tensorflow.keras.optimizers import Adam
+
+iris_data = sns.load_dataset('iris')
+iris_data.head()
+
+x = iris_data.drop(['species'], axis = 1)
+y = pd.get_dummies(iris_data.species, prefix ='output')
+x.head()
+y.head()
+
+x = x.values
+y = y.values
+
+import sklearn
+from sklearn.model_selection import train_test_split
+x_train,x_test, y_train, y_test = train_test_split(x,y, test_size=0.20, random_state=42)
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+x_train = sc.fit_transform(x_train)
+x_test = sc.fit_transform(x_test)
+
+def create_model (learning_rate, dropout_rate):
+    
+    model = Sequential()
+    model.add(Dense(12, input_dim = x_train.shape[1], activation = 'relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(6, activation='relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(y_train.shape[1], activation='softmax'))
+    
+    adam = Adam(lr= learning_rate)
+    model.compile(loss = 'categorical_crossentropy', optimizer = adam, metrics = ['accuracy'])
+    
+    return model 
+    
+dropout_rate = 0.1
+epochs = 50
+batch_size = 1
+learn_rate = 0.001
+
+model = create_model(learn_rate,dropout_rate)
+from tensorflow.keras.utils import plot_model
+plot_model (model, to_file = 'model_plot1.png', show_shapes = True, show_layer_names = True)
+
+model_history = model.fit(x_train,y_train, batch_size = batch_size, epochs=epochs, validation_split = 0.2, verbose =1)
+
+accuracies = model.evaluate(x_test,y_test, verbose=1)
+
+print(accuracies[0])
+print(accuracies[1])
+
+
+
